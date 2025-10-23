@@ -1,4 +1,12 @@
 # Titolo
+```cpp
+git add .
+git commit -m "Aggiornato Appunti.md con nuove sezioni"
+git push origin main
+
+```
+
+
 ## Intestazione
 ```cpp
 codice cpp
