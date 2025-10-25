@@ -1,0 +1,17 @@
+# File oggetto
+*.o
+*.obj
+
+# Eseguibili
+*.exe
+*.out
+a.out
+
+# Cartelle di build
+build/
+bin/
+
+# File temporanei dell’editor
+*.swp
+*~
+.vscode/
