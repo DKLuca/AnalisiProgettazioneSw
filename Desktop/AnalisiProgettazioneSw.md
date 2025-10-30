@@ -392,3 +392,140 @@ Devo restituire `os` stesso e non una copia (senza `&` non sarebbe possibile per
         }
     }
 ```
+
+## Classe Stack
+
+Ha un utilizzo molto limitato perché ha un numero finito di primitive. È una struttura LIFO (Last In - First Out)
+
+- `push`: inserimento di un dato alla cima della pila
+- `pop`: elimina l'elemento in cima alla pila 
+- `top`: mi dice l'elemento in cima
+- `isEmpty`: restituisce un bool a seconda se la pila è vuota o meno. (true = vuota, false = non vuota)
+
+Le pile sono usate ad esempio nei record di attivazione
+
+```cpp
+
+//...
+//corpo del file
+//...
+#endif
+//file.hpp
+#ifndef STACK_HPP
+#define STACK_HPP
+class Stack //(o Pila)
+{
+    public:
+        Stack();
+        void Push(int e);
+        void Pop() {top--;} //non robusto, andrebbe fatta isEmpty()
+        int Top() const { return v[top]; } //non modifica la pila
+        bool isEmpty() const {return (top == -1);}
+
+    private:
+        //non c'è una isFull(), la pila non dovrebbe avere
+        //un limite superiore (uso un vettore dinamico)
+        //alloco un vettore di dimension N e quando si riempie
+        //dealloco il vettore lungo N e ne rialloco un vettore lungo 2N
+
+        int* v;
+        int DIM; //non unsigned (vederemo più avanti perché)
+        int top; //posizione elemento in cima
+
+    friend:
+        ostream& operator<<(ostream& os, const Stack& s);
+        istream& operator>>(istream& is, Stack& s);
+};
+#endif
+```
+
+```cpp
+Stack p;
+p.Push(3);
+p.Push(-5);
+p.Pop();
+cout << p.Top(); //stampa 3
+```
+
+```cpp
+//file.cpp
+Pila::Pila()
+{
+    DIM = 100;
+    v = new int[DIM];
+    top = -1;
+}
+
+Pila::Push(int e)
+{
+    if(top + 1 == DIM) //o (top == DIM - 1)
+    {
+        int *aux;
+        aux = new int[2DIM];
+
+        //copio gli elementi nel nuovo
+        for(int i = 0; i < DIM; i++) //o (i <= top)
+            aux = v;
+
+        delete []v; //libero la memoria
+        v = aux; //cambio ptr e lo punto al nuovo blocco
+        DIM *= 2; //raddoppio la dimensione
+    }
+    v[++top] = e; //a valle di eventuale riallocamento
+}
+
+ostream& operator<<(ostream& os, const Stack& s)
+{
+    //(elem1, elem2, ... , elemTop)
+    os << '(';
+
+    for(int i = 0; i < s.top; i++)
+        os << s.v[i] << ", ";
+
+    //se i <= s.top stampo ( ..., elemTop, ) <- errore trascinamento
+    //os << s.v[s.top]; se vuota accedo alla locazione -1
+
+    if(!s.isEmpty())
+        os << s.v[s.top];
+    os << ')';
+
+    return os;
+}
+
+istream& operator>>(istream& is, Stack& s)
+{
+    //non sapendo la dimensione dello stack letto da input
+    //faccio le push degli elementi e ci pensa lei per eventuale
+    //stack pieno
+
+    //>> sovrascrive la pila
+    s.top = -1; //"cancello" la pila
+
+    int e;
+    char ch;
+    is >> ch; //elimino la prima (
+    //leggo il carattere successivo e se ) la pila è vuota
+    //problema che "consumo" un carattere
+
+    //esiste un metodo di istream che prende il primo carattere
+    //senza "consumarlo" con la peek
+    ch = is.peek();
+    if(ch != ')') //stack non vuota;
+    {
+        do
+        {
+            is >> e >> ch;
+            s.Push(e);
+        } while (ch != ')');
+    }
+    else //devo comunque leggere la chiusa tonda
+        is >> ch;
+
+    return is;
+}
+```
+Per leggere i caratteri ci sono tre modi:
+
+- is >> ch; legge un carattere significativo (no spazi, tab, \n)
+- ch = is.get(); prende il primo carattere anche non significativo
+- ch = is.peek(); "vede" il primo carattere
