@@ -526,6 +526,151 @@ istream& operator>>(istream& is, Stack& s)
 ```
 Per leggere i caratteri ci sono tre modi:
 
-- is >> ch; legge un carattere significativo (no spazi, tab, \n)
-- ch = is.get(); prende il primo carattere anche non significativo
-- ch = is.peek(); "vede" il primo carattere
+- ```is >> ch```; legge un carattere significativo (no spazi, tab, \n)
+- ```ch = is.get();``` prende il primo carattere anche non significativo
+- ```ch = is.peek();``` "vede" il primo carattere
+
+Quando faccio 
+
+```cpp
+Stack s1, s2;
+s1 = s2;
+```
+
+Con questa assegnazione il puntatore presente dentro a s2 (v) punta al puntato di s1. Facendo ora `p2.Push(21)` vado a scrivere dentro al vettore creato da s1 e non si fa la copia del vettore ma solo del puntatore. Si ha quindi la condivisione di memoria (essendo dinamica) e a sua volta l'interferenza. Il vettore inizialmente creato per s2 viene perso (memory leak) e non è più accessibile. Per ovviare a questo problema si deve ridefinire l'operatore di assegnazione.
+
+Tutte le classi che usano l'allocazione dinamica della memoria devono ridefinire l'operatore di assegnazione e il costruttore di copia.
+
+```cpp
+//facciamo con funzioni esterne le operazioni con operatori paritetici
+//a sx c'è sempre un oggetto e a dx un parametro
+
+//l'uguale ha precedenza a destra
+Stack& Stack::operator=(const Stack& s)
+{
+    if(this != &s) //evito l'autoassegnazione
+    {
+        //se s.top >= DIM devo riallocare
+        if(s.top >= DIM)
+        {
+            delete []v; //libero la memoria attuale
+            DIM = s.DIM;
+            v = new int[s.DIM]; //alloco un vettore più grande (quanto s2)
+        }
+        top = s.top;
+        
+        for(int i = 0; i <= top; i++)
+            v[i] = s.v[i];
+    }
+    return *this; //ritorno l'oggetto corrente
+}
+```
+
+Non è stato risolto il costruttore di copia che viene chiamato quando si crea un oggetto inizializzandolo con un altro oggetto della stessa classe.
+
+```cpp
+//costruttore di copia
+Stack s1 = s2; //Stack s1(s2);
+```
+
+Si deve ridefinire anch'esso come l'operatore di assegnazione
+
+```cpp
+Stack::Stack(const Stack& s)
+{
+    DIM = s.DIM;
+    top = s.top;
+    v = new int[DIM];
+
+    for(int i = 0; i <= top; i++)
+        v[i] = s.v[i];
+}
+```
+
+Finito il programma/funzione, i vari vettori allocati non vengono eliminati automaticamente, si deve ridefinire il distruttore della classe per liberare la memoria.
+
+```cpp
+Stack::~Stack()
+{
+    delete []v;
+}
+```
+
+Nel cpp esiste una costante di tipo puntatore `nullptr` che indica che il puntatore non punta a nulla. Si può usare per inizializzare i puntatori.
+
+## Classe String
+
+La classe stringa è una classe che gestisce le stringhe di caratteri. In C esistono le stringhe come array di caratteri terminati dal carattere nullo `'\0'`. La classe stringa gestisce internamente l'array di caratteri e fornisce delle primitive per manipolarle.
+
+```cpp
+String s("Pippo");
+//equivale a
+s = "Pippo";
+//viene chiamato il costruttore che prende come parametro una stringa (array di caratteri)
+``` 
+
+Esiste l'operatore `[]` per accedere ai singoli caratteri della stringa.
+
+```cpp
+char c = s[0]; //c = 'P'
+s[1] = 'a'; //s = "Pappo"
+
+//voglio che funzioni anche
+string s[2] = ch;
+//se devinisco l'operatore [] come funzione const, non funziona
+//il trucco è di definire due operatori []
+char& String::operator[](unsigned i) const 
+{
+    //controlli su i
+    return v[i]; //v è il vettore di caratteri
+}
+char String::operator[](unsigned i) const 
+{
+    //controlli su i
+    return v[i]; //v è il vettore di caratteri
+}
+
+//fanno due cose diverse a seconda se l'oggetto è const o meno
+
+ch = s[s.lenth() + 2]; //errore (buffer overflow)
+
+//il metodo at fa il controllo sull'indice
+ch = s.at(s.length() + 2); //lancia eccezione
+```
+
+## Lettura e scrittura di file
+Per leggere e scrivere su file si usano due classi: `ifstream` per la lettura e `ofstream` per la scrittura. Entrambe derivano dalla classe `fstream` che gestisce sia la lettura che la scrittura.
+
+```cpp
+#include <fstream>
+using namespace std;
+//scrittura su file
+ofstream os;
+os.open("nomefile.txt");
+//ofstream fout("nomefile.txt"); open nel costruttore
+if(!os)
+{
+    cerr << "Errore nell'apertura del file" << endl;
+    exit(1);
+}
+os << "Ciao mondo!" << endl; //scrivo dentro al file una riga
+os.close();
+
+//sia open che close sono superflue
+```
+
+```cpp
+//lettura da file
+ifstream fin("nomefile.txt");
+if(!fin)
+{
+    cerr << "Errore nell'apertura del file" << endl;
+    exit(1);
+}
+string line;
+while(getline(fin, line))
+{
+    cout << line << endl;
+}
+fin.close();
+```
