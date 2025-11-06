@@ -586,6 +586,7 @@ Stack::Stack(const Stack& s)
         v[i] = s.v[i];
 }
 ```
+Quando passiamo un oggetto per valore o lo restituiamo, viene incocato il costruttore di copia
 
 Finito il programma/funzione, i vari vettori allocati non vengono eliminati automaticamente, si deve ridefinire il distruttore della classe per liberare la memoria.
 
@@ -674,3 +675,77 @@ while(getline(fin, line))
 }
 fin.close();
 ```
+
+## Esercizi
+
+File contiene un file di date ordinate cronologicamente, si scriva una funzione che prende un file e si fornisca la media delle date presenti nel file.
+
+Fare le date - data di riferimento, media dei giorni e la sommo alla data di riferimento e ottengo la data media.
+
+In c si usa:
+
+```c
+while(fscanf(fp, ... ) != EOF)
+```
+Per leggere tutto il file fino alla fine.
+
+Mentre in cpp per leggere l'intero file (fino all'EOF):
+
+```cpp
+while(is >> d) //con l'operatore di input, se non riesce a leggere esce. C'è un convertitore da osream a int (while prende un intero e non un bool per compatibilità con il c)
+```
+
+```cpp
+#include <iostream>
+#include <fstream>
+#include "Data.hpp"
+using namespace std;
+
+Data mediaDate(string filename)
+{
+    ifstream is(filename);
+    Data d_rif, d1;
+    unsigned somma = 0, conta = 0;
+
+    while (is >> d1)
+    {
+        somma += d1 - d_rif; //conversione in giorni
+        conta++;
+    }
+    return ((d_rif + somma) / conta); //ritorno la data media
+```
+
+```cpp
+int operator-(Data d1, Data d2)
+{
+    int n = 0;
+    if (d1 < d2)
+    {
+        Data aux = d1; //creo una data ausiliaria per non modificarla
+        while (aux != d2)
+        {
+            aux++;
+            n++;
+        }
+    }
+    else
+    {
+        Data aux = d2;
+        while (aux != d1)
+        {
+            aux++;
+            n++;
+        }
+    }
+    return n;
+}
+```
+
+Non si può invocare il costruttore di un oggetto già costruito
+
+```cpp
+A a1(5);
+a1(5); //errore
+```
+
+cerca di invocare l'operatore `()` sull'oggetto a1. Si può ridefinire l'operatore `()` per una classe anche se in questo esempio non è definito.
