@@ -692,7 +692,7 @@ Per leggere tutto il file fino alla fine.
 Mentre in cpp per leggere l'intero file (fino all'EOF):
 
 ```cpp
-while(is >> d) //con l'operatore di input, se non riesce a leggere esce. C'è un convertitore da osream a int (while prende un intero e non un bool per compatibilità con il c)
+while(is >> d) //con l'operatore di input, se non riesce a leggere: esce. C'è un convertitore da ostream a int (while prende un intero e non un bool per compatibilità con il c)
 ```
 
 ```cpp
@@ -713,6 +713,7 @@ Data mediaDate(string filename)
         conta++;
     }
     return ((d_rif + somma) / conta); //ritorno la data media
+}
 ```
 
 ```cpp
@@ -785,4 +786,93 @@ A::A(const A& a)
             p2[i] = a.p2[i];
     }
 }
+```
+
+L'operatore di assegnazione:
+
+```cpp
+A& A::operator=(const A& a)
+{
+    unsigned i;
+    b = a.b;
+    size = a.size; //eventuale if per riallocare se dimensioni diverse, in caso copia degli elementi
+    delete []p1; //elimino i vettori creati
+    delete []p2;
+    p1 = new int[size];
+    for(i = 0; i < size; i++)
+        p1[i] = a.p1[i];
+    if(a.p2 == nullptr)
+        p2 = nullptr;
+    else
+    {
+        p2 = new int[size];
+        for(i = 0; i < size; i++)
+            p2[i] = a.p2[i];
+    }
+    return *this;
+}
+```
+
+### Esercitazione 3
+
+Gestione di un polinomio con coefficienti reali ed esponenti interi. È imposto che vengano inseriti in un vettore fino al massimo esponente. Le celle contengono il coefficiente (es 1x^3 + 1 va inserito in un vettore di dimensione 4 con celle 1,0,0,1). 
+
+Il vettore va fatto di dimensione massima pari all'eponente.
+
+C'è un costruttore che costruisce un monomio: `Polinomio P(3,100);`. Operatore che valuta il polinomio, si fa con l'operatore (). `double operator()(double y)` (quanto vale il polinomio nel punto, sostituisco x con il valore dentro le parentesi).
+
+Le parentesi [] vogliono un unsigned int unico, le parentesi tonde è molto più generico.
+
+Leggere e scrivere nel seguente modo: `-3.2x^4 + 3.1x^2 + -7.2x^0` sempre nell'ordine dal più grande al più piccolo. Ci dice quanto grande allocare il vettore.
+
+## Composizione tra classi
+
+```cpp
+class A
+{
+    //...
+};
+class B
+{
+    A a; //ha un campo di tipo A
+};
+int main()
+{
+    //quando dichiaro due oggetti di tipo B
+    B b1, b2;
+    b1 = b2;
+    //invoca l'operatore di assegnazione di B, se non presente invoca quello di default. Si copia anche l'oggetto A con il proprio operatore di assegnazione.
+    //B può essere statica e A dinamica e viene gestito internamente
+    //se non ho scritto il costruttore di B ma di A, quando creo b1 e b2 non viene inizializzato nessun elemento tranne la classe A perché ha un proprio costruttore
+}
+
+```
+
+```cpp
+//se avessi un costruttore in B
+class B
+{
+    B(int k, int j);
+    int i;
+    A a;
+}
+//j lo voglio usare per inizializzare A
+//ipotizzo che A abbia un costruttore con parametro int
+B::B(int k, int j)
+    : a(j)
+{
+    i = k;
+}
+//se non iserito :a(j) viene chiamato quello di default senza parametri
+B::B(int k, int j)
+{
+    i = k;
+    a = A(j);
+}
+//è uguale ma si crea un oggetto di appoggio (A(j)) solo per l'assegnazione.
+```
+
+```cpp
+Impegno(string nome, Data d1, Data d2 = Data());
+//questo costruttore imposta la data di default a d2 se non passato come parametro
 ```
