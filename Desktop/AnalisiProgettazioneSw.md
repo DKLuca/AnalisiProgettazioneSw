@@ -749,3 +749,40 @@ a1(5); //errore
 ```
 
 cerca di invocare l'operatore `()` sull'oggetto a1. Si può ridefinire l'operatore `()` per una classe anche se in questo esempio non è definito.
+
+```cpp
+int main()
+{
+    A a1(5), a2(5);
+    a1.Set(3,-4);
+    a1.Set(4,9);
+    a2 = a1;
+    a2.Set(4,-6);
+    a2.Flip();
+    cout << a1.Get(4) << ' ' << a2.Get(4) << endl;
+}
+```
+C'è un errore in questo codice in quanto c'è la condivisione di memoria tra a1 e a2. Si deve ridefinire l'operatore di assegnazione e il costruttore di copia per evitare questo problema.
+
+Prima del fix viene stampato `-4` e `0`
+
+```cpp
+//costruttore di copia
+A::A(const A& a)
+{
+    unsigned i;
+    b = a.b;
+    size = a.size;
+    p1 = new int[size];
+    for(i = 0; i < size; i++)
+        p1[i] = a.p1[i];
+    if(a.p2 == nullptr)
+        p2 = nullptr;
+    else
+    {
+        p2 = new int[size];
+        for(i = 0; i < size; i++)
+            p2[i] = a.p2[i];
+    }
+}
+```
