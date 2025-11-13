@@ -983,13 +983,55 @@ Data Impegno2::getFine() const
     return *p_fine; //ritorno l'oggetto puntato
 }
 ```
+## Template
+
+Si dichiara una classe generica che può essere istanziata con diversi tipi di dato tramite l'uso di template.
+
+Si userà poi, ad esempio,
+`Pila<int> p1;` per una pila di interi e `Pila<double> p2;` per una pila di double. Istanzierà due classi distinte con tipi diversi, non si potrà fare l'assegnazione tra oggetti di tipo diverso.
+
+Si potrà fare anche per le funzioni esterne e non solo per i metodi di una classe
+
+Il template sta tutto nell'hpp e non avrò un cpp separato.
+```cpp
+template <typename T>
+class Pila
+{
+    public:
+        Pila();
+        Pila(const Pila<T>& p);
+        Pila<T>& operator=(const Pila<T>& p);
+        void Push(const T& e); //passo un T per riferimento costante
+        void Pop() {top--;} //non robusto, andrebbe fatta isEmpty()
+        T Top() const { return v[top]; } //non modifica la pila
+        bool isEmpty() const {return (top == -1);}
+    private:
+        T* v; //generito tipo T
+        int DIM; //dimensione del vettore
+        int top; //posizione elemento in cima
+};
+
+template <typename T>
+Pila<T>::Pila()
+{
+    DIM = 100;
+    v = new T[DIM];
+    top = -1;
+}
+//posso creare uno stack di oggetti A ma la classe deve contenere il costruttore di copia e l'operatore di assegnazione oltre che il costruttore senza parametri
+//posso usare qualsiasi cosa finché abbia le operazioni che uso dentro la classe Pila (anche, per esempio, l'input e output)
+```
+
+La classe è identica alla Stack precedente ma in forma generica, è stato sostituito `int` con `T`.
+
+Si può fare anche `Pila<Pila<int>> p;` per avere una pila di pile di interi.
 
 ## ESERCITAZIONE 3
 Sistemare il costruttore con due parametri, esponente default a 0 per fare la conversione di tipo di un float `p + 3.2`. 
 
 Allo stesso modo deve funzionare `3.2 + p` tramite l'operatore somma. USARE IL SUO DRIVER PER I TEST
 
-## Esercizio Compitino
+## Esercizio Compitino 2020-2021
 ```cpp
 class B
 {
@@ -1071,3 +1113,33 @@ A::A(const A& a)
         //p2 = new B(a.p2->Get());
 }
 ```
+```cpp
+A& A::operator=(const A& a)
+{
+    *p1 = *(a.p1);  // copia l'oggetto puntato da p1 
+    // (non è necessario deallocarlo e riallocarlo)
+    if (a.p1 == a.p2)
+    {
+        if (p1 != p2)
+        {
+            delete p2;
+            p2 = p1;
+        }
+        // else: nessuna azione 
+    }
+    else
+        if (p1 == p2)
+        p2 = new B(*(a.p2)); 
+        else
+        *p2 = *(a.p2);
+    return *this;
+} 
+```
+
+Non si può fare la delete di un oggetto due volte, il compilatore segnala errore se si tenta di farlo. 
+
+Uno può eliminare il costruttore di copia e l'operatore di assegnazione se non si vuole permettere la copia degli oggetti della classe A. 
+
+`A(const A& a) = delete;` e `A& operator=(const A& a) = delete;`
+
+Non si può chiamare il costruttore di copia o l'operatore di assegnazione in quanto sono stati eliminati.
