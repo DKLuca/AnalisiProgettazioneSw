@@ -834,6 +834,7 @@ class A
 };
 class B
 {
+    //...
     A a; //ha un campo di tipo A
 };
 int main()
@@ -872,7 +873,201 @@ B::B(int k, int j)
 //è uguale ma si crea un oggetto di appoggio (A(j)) solo per l'assegnazione.
 ```
 
+### Classe Impegno
+
 ```cpp
 Impegno(string nome, Data d1, Data d2 = Data());
 //questo costruttore imposta la data di default a d2 se non passato come parametro
+//si ipotizza che l'impegno non abbia fine se la sua data (di fine) è quella di default
+```
+
+Supponendo di voler un impegno senza una data di fine (con nessun valore di riferimento), devo usare un puntatore. Se il puntatore punta a `nullptr` significa che non c'è una data di fine. È più complesso in quanto si deve implementare la gestione di un oggetto.
+
+### Classe Impegno2
+
+```cpp
+class Impegno2
+{
+    //...
+    private:
+        string nome;
+        Data inizio;
+        Data* p_fine; //puntatore a data
+};
+```
+
+Al posto di avere un oggetto statico, ne ho uno dinamico. Devo implementare il costruttore di copia e l'operatore di assegnazione per evitare la condivisione di memoria.
+
+```cpp
+Impegno2::Impegno2(string n, Data d1, Data d2)
+    : nome(nome), inizio(d1)
+{
+    if(d2 == Data()) //se d2 è la data di default
+        p_fine = nullptr; //nessuna data di fine
+    else
+        p_fine = new Data(d2); //creo una nuova data con il valore di d2 (costruttore di copia)
+}
+```
+
+Siamo abitatuati a usare `p = new int[DIM];` per creare vettori dinamici, ma si può usare anche per oggetti singoli tramite l'uso di parentesi tonde: `p = new int(valore);`
+
+Se usassi: `p = new Data[10];` verrebbe chiamato il costruttore di default e non quello con parametro per creare un vettore di Date lungo 10.
+
+Per il distruttore del singolo oggetto si usa: `delete p` mentre per i vettori `delete []p;`. Le parentesi quadre in realtà servirebbero per indicare che il distruttore va chiamato per ogni elemento del vettore. Nel vettore di interi non sarebbe necessario in quanto non sono oggetti i singoli elementi.
+
+```cpp
+Impegno2::Impegno2(string n, int anno 1, int anno2)
+    : nome(n), inizio(1,1,anno1)
+{
+    p_fine = new Data(31,12,anno2);
+}
+```
+
+```cpp
+Impegno2::Impegno2(const Impegno2& im)
+    : nome(im.nome), inizio(im.inizio)
+{
+    if(im.p_fine == nullptr)
+        p_fine = nullptr;
+    else
+        p_fine = new Data(*(im.p_fine)); //dereferenzio il puntatore per ottenere l'oggetto Data
+        //copio il valore dell'oggetto puntato (senza puntatore copierei l'indirizzo di memoria e tutti gli elementi dell'oggetto)
+}
+```
+
+```cpp
+Impegno2& Impegno2::operator=(const Impegno2& im)
+{
+    nome = im.nome;
+    inizio = im.inizio;
+    //se l'elemento che voglio copiare non ha data di fine
+    if(im.p_fine == nullptr)
+    {
+        //l'oggetto in cui sto copiando ne ha una
+        //la cancello
+        if(p_fine != nullptr)
+        {
+            delete p_fine; //libero la memoria attuale
+            p_fine = nullptr;
+        }
+        //se sono entrambi nullptr non faccio nulla
+    }
+    //l'elemento che voglio copiare ha una data di fine
+    else
+    {
+        if(p_fine == nullptr)
+            p_fine = new Data(*(im.p_fine)); //creo un nuovo oggetto Data
+        else
+            //faccio la copia profonda
+            *(p_fine) = *(im.p_fine); //assegno il valore all'oggetto esistente
+            //la copia delle date è gestito dalla classe Data
+            //non mi preoccupo di come è fatto internamente
+    }
+    return *this;
+}
+```
+
+```cpp
+Impegno2::~Impegno2()
+{
+    delete p_fine; //se p_fine è nullptr non succede nulla
+}
+```
+
+```cpp
+Data Impegno2::getFine() const
+{
+    if(p_fine == nullptr)
+        //throw lancia un'eccezione (si rivedrà più avanti)
+        throw runtime_error("Impegno senza data di fine");
+    return *p_fine; //ritorno l'oggetto puntato
+}
+```
+
+## ESERCITAZIONE 3
+Sistemare il costruttore con due parametri, esponente default a 0 per fare la conversione di tipo di un float `p + 3.2`. 
+
+Allo stesso modo deve funzionare `3.2 + p` tramite l'operatore somma. USARE IL SUO DRIVER PER I TEST
+
+## Esercizio Compitino
+```cpp
+class B
+{
+    public:
+        B(int n) { num = n; }
+        void set(int n) { num = n; }
+        int Get() const { return num; }
+    private:
+        int num;
+};
+//*p.campo = p->campo
+class A
+{
+    public:
+        A(int v = 0) { p1 = new B(v); p2 = p1;}
+        void Set1(int v) { p1 -> set(v); }
+        void Set2(int v) { p2 -> set(v); }
+        int Get1() const {return p1->Get(); } //restituisce un intero (fanno get del oggetto attaccato a p1 (un oggetto di tipo B))
+        int Get2() const {return p2->Get(); }
+        //passo da un oggetto condiviso a due oggetti con lo stesso valore
+        void Flip()
+        {
+            if (p1 == p2)
+                p2 = new B(p1->Get());
+            else
+            {
+                delete p2;
+                p2 = p1;
+            }
+        }
+    //i due pointer puntano allo stesso oggetto o a oggetti distinti ma uguali
+    private:
+        B* p1;
+        B* p2;
+};
+
+int main()
+{
+    A a1(5);
+    a1.Flip();
+    a1.Set1(6);
+    A a2 = a1;
+    a2.Set1(4);
+    cout << a1.Get1() << '/' << a2.Get1() << endl;
+    return 0;
+}
+
+//riga 1:
+//un solo oggetto B con valore 5 puntato da entrambi
+//riga 2:
+//due oggetti B distinti con valore 5
+//riga 3:
+//a1 ha p1 che punta a B(6) e p2 che punta a B(5)
+//riga 4:
+//a2 ha p1 e p2 che puntano a B(6) e B(5) (gli stessi di a1)
+//riga 5:
+//a2 ha p1 che punta a B(4) e p2 che punta a B(5) (gli stessi di a1)
+// stampa 4/5
+
+//se non ci fosse stata interferenza avrebbe stampato 6/5
+```
+
+Scrivere il costruttore di copia e l'operatore di assegnazione per la classe A in modo che non ci sia interferenza tra oggetti distinti e infine, scrivere il distruttore per evitare memory leak.
+```cpp
+//costruttore di copia
+A::A(const A& a)
+{
+    p1 = new B(*(a.p1)); //creo un nuovo oggetto B con il valore di a.p1 tramite costruttore di copia
+
+    //analogo:
+    //p1 = new B(a.p1->Get()); //chiamo il costruttore normale
+
+    if(a.p1 == a.p2) //se i due puntatori puntano allo stesso oggetto
+        p2 = p1; //p2 punta allo stesso oggetto di p1
+    else
+        p2 = new B(*(a.p2)); //creo un nuovo oggetto B con il valore di a.p2
+
+        //analogo:
+        //p2 = new B(a.p2->Get());
+}
 ```
