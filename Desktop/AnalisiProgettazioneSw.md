@@ -1101,8 +1101,175 @@ vector<vector<int>> mat; //matrice di interi vuota
 vector<vector<int>> mat(10); //matrice con 10 righe e 0 colonne di vettori tutti vuoti
 vector<vector<float>> mat(10, vector<float>(5, -2)); //matrice 10x5 con tutti gli elementi inizializzati a -2
 mat[2][3] = 5; //assegna 5 alla riga 2 e colonna 3 della matrice
+
+//Equiavalente a
+vector<vector<float>> mat();
+for(int i = 0; i < 10; i++)
+    mat[i].resize(20, -1.0); 
+
+//Equivalente a 
+vector<vector<float>> mat;
+mat.resize(10);
+for(int i = 0; i < 10; i++)
+    mat[i].resize(20, -1.0); 
 ```
+
+## ESERCIZI SU VECTOR
+```cpp
+//file Persona.hpp
+class Persona
+{
+    friend bool operator<(const Persona& p1, const Persona& p2);
+    friend istream& operator>>(istream&, Persona&);
+    friend ostream& operator<<(ostream&, const Persona&);
+    public:
+        Persona(string n, string c, Data d, string cn);
+        Persona() {}
+        string Nome() const { return nome; }
+        string Cognome() const { return cognome; }
+        Data DataNascita() const { return data_nascita; }
+        string CittaNascita() const { return citta_nascita; }
+    private:
+        string nome;
+        string cognome;
+        Data data_nascita;
+        string citta_nascita;
+};
+```
+```cpp
+//file Persona.cpp
+// File Persone.cpp
+#include "Persone.hpp"
+
+Persona::Persona(string n, string c, Data d, string cn)
+  : nome(n), cognome(c), data_nascita(d), citta_nascita(cn)
+{}
+
+ostream& operator<<(ostream& os, const Persona& p)
+{
+  os << '-' << p.nome << ", " << p.cognome << endl
+     << p.data_nascita << " " << p.citta_nascita << endl;
+  return os;
+}
+//-Filippo Maria, Verdi Gialli
+// 12/12/1990 Roma
+
+//funziona solo con un singolo spazio di separazione
+istream& operator>>(istream& is, Persona& p)
+{
+    is.ignore(256,'-'); //ignoro fino al - (incluso)
+    if(is)
+    {
+        //getline funziona per le stringhe
+        //is.getline per i char[]
+        getline(is, p.nome, ','); //legge la riga fino al carattere indicato (,) e lo consuma senza inserirlo nella stringa
+        is.get(); //serve a consumare lo spazio dopo la ,
+        getline(is, p.cognome); //non c'è un carattere di fine riga, legge fino al \n (valore default)
+        is >> p.data_nascita;
+        is.get();
+        getline(is, p.citta_nascita);
+    }
+    return is;
+}
+
+bool operator<(const Persona& p1, const Persona& p2)
+{
+  return ((p1.data_nascita < p2.data_nascita)
+       || (p1.data_nascita == p2.data_nascita && p1.cognome < p2.cognome));
+}
+```
+Fare una funzione che legge il nome di un file e dice il mese più comune di nascita tra le persone presenti nel file.
+
+Vorrei che restituisse il mese e la frequenza. (o si fa una piccola classe, o si passa per riferimento due parametri o si usa una coppia `pair<int, int>`)
+`pair` ha due campi `first` e `second`.
+```cpp
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include "Persona.hpp"
+using namespace std;
+
+//non è necessario usare un vector di Persona perché possiamo processare immediatamente la data di nascita
+int main(int argc, char *argv[])
+{
+    string nome_f; //nome file
+    
+    if (argc == 1)
+    {
+        cout << "Nome file : ";
+        cin >> nome_f;
+    }
+    else if (argc == 2)
+        nome_f = argv[1];
+    else
+        exit(1); 
+
+    pair<unsigned,unsigned> fm = CalcolaMeseFrequente(nome_f);
+
+    cout << "Mese piu' frequente: " << fm.first << " con " << fm.second << " occorrenze." << endl;
+
+    return 0;
+}
+
+pair<unsigned,unsigned>  CalcolaMeseFrequente(string nome_file)
+{
+    //apro il file (niente check)
+    ifstream is(nome_file);
+    Persona pers; //definisco una persona per la lettura
+    vector<unsigned> occorrenze(12,0); //occorrenze(12);
+    // pair<unsigned,unsigned> fm;
+    unsigned i, max = 0; //variabili per max
+    //max per posizione
+
+    while (is >> pers) //leggo una persona per volta finché trovo qualcosa
+    //inserisco dentro il vettore l'occorrenza del mese
+    //tirato fuori da DataNascita tramite selettori
+        occorrenze[pers.DataNascita().Mese() - 1]++;
+
+    for (i = 1; i < occorrenze.size(); i++)
+        if (occorrenze[i] > occorrenze[max])
+        max = i;
+
+    //make_pair crea una coppia con i tipi che gli passo
+    return make_pair(max + 1, occorrenze[max]);
+    //chiudo il file (automatico alla distruzione di is)
+}
+```
+calcolare il nome più frequente tra le persone nel file.
+```cpp
+pair<string,unsigned> CalcolaNomeFrequente(string nome_file)
+{
+    ifstream is(nome_file);
+    Persona pers;
+    bool trovato;
+    vector<pair<string, unsigned>> occorrenze; 
+    // pair<string,unsigned> fn;
+    unsigned max = 0, i;
+
+    while (is >> pers)
+    {
+        trovato = false; //nome non trovato
+        for (i = 0; i < occorrenze.size(); i++)
+            if (occorrenze[i].first == pers.Nome())
+            {
+                occorrenze[i].second++;
+                trovato = true;
+                break;
+            }
+        if (!trovato)
+        {
+            occorrenze.push_back(make_pair(pers.Nome(), 1));
+        }
+    }
+    for (i = 1; i < occorrenze.size(); i++)
+        if (occorrenze[i].second > occorrenze[max].second)
+        max = i;
+    return occorrenze[max];
+}
+```
+
 ## ESERCITAZIONE 3
+
 Sistemare il costruttore con due parametri, esponente default a 0 per fare la conversione di tipo di un float `p + 3.2`. 
 
 Allo stesso modo deve funzionare `3.2 + p` tramite l'operatore somma. USARE IL SUO DRIVER PER I TEST
@@ -1219,4 +1386,3 @@ Uno può eliminare il costruttore di copia e l'operatore di assegnazione se non 
 `A(const A& a) = delete;` e `A& operator=(const A& a) = delete;`
 
 Non si può chiamare il costruttore di copia o l'operatore di assegnazione in quanto sono stati eliminati.
-
