@@ -1026,6 +1026,82 @@ La classe è identica alla Stack precedente ma in forma generica, è stato sosti
 
 Si può fare anche `Pila<Pila<int>> p;` per avere una pila di pile di interi.
 
+Per le classi friend con template, devo usare un secondo template.
+
+Si può usare il template per le funzioni esterne, ad esempio per le funzioni di minimo o massimo. Se la classe o i tipi hanno l'operatore `<` definito, si può fare il calcolo del minimo (e del massimo)
+
+```cpp
+template <typename T>
+//return per riferimento costante
+const T& min(const T& a, const T& b)
+{
+    return (a < b) ? a : b;
+}
+```
+
+## Vector
+La classe vector è una classe che gestisce un vettore dinamico di oggetti di tipo T. Si comporta come un array dinamico ma con una gestione più semplice della memoria.
+
+```cpp
+#include <vector>
+using namespace std;
+vector<int> v; //vettore di interi
+
+//costruttori
+vector<int> v1; //vettore vuoto (dimensione 0)
+vector<int> v2(10); //vettore di dimensione 10 con valori a 0
+vector<int> v3(10, 5); //vettore di dimensione 10 con tutti gli elementi inizializzati a 5 (v3(unsigned, T))
+vector<int> v4{3,4,5,6}; //vettore con inizializzazione lista
+
+//accesso agli elementi
+v3[2] = 10; //assegna 10 alla terza posizione del vettore v3
+int d = v2[3]; //assegna alla d il valore della quarta posizione di v2, non c'è check di posizione e si può usare se v2 è const
+d = v2.at(3); //assegna alla d il valore della quarta posizione di v2, c'è il check di posizione e lancia eccezione se fuori range
+
+//dimensione del vettore
+unsigned n = v.size(); //restituisce la dimensione del vettore
+v.push_back(3); //inserisce in fondo al vettore l'elemento, se il vettore è pieno lo ridimensiona automaticamente aggiungendo una posizione (di solito raddoppia la dimensione)
+v.resize(20); //ridimensiona il vettore a 20 elementi, se più grande aggiunge elementi a 0, se più piccolo elimina gli elementi in eccesso
+v.resize(20, 7); //ridimensiona il vettore a 20 elementi, se più grande aggiunge elementi a 7, se più piccolo elimina gli elementi in eccesso
+v.clear(); //equivalente alla resize(0), elimina tutti gli elementi del vettore
+
+//esiste anche la push_front() ma è inefficiente in quanto sposta tutti gli elementi
+
+v3.pop_back(); //elimina l'ultimo elemento del vettore
+
+v3.back(); //restituisce l'ultimo elemento del vettore 
+//equivale a v3[v3.size() - 1];
+
+v3.pop_front(); //elimina il primo elemento del vettore, inefficiente in quanto sposta tutti gli elementi 
+
+//Il vector è tutto consecutivo in memoria, non ci sono buchi come con le pile
+
+v2.insert(v2.begin() + 2, 10); //inserisce il valore 10 nella terza posizione del vettore v2, spostando tutti gli elementi successivi di una posizione
+
+v2.erase(v2.begin() + 3); //elimina il quarto elemento del vettore v2, spostando tutti gli elementi successivi di una posizione indietro 
+//devo fornire l'indirizzo iniziale del vettore più lo spostamento perché vuole l'indirizzo corretto e non solo l'offset.
+
+//esiste la erase per intervalli
+v2.erase(v2.begin() + 2, v2.begin() + 5); //elimina gli elementi dalla terza alla quinta posizione (esclusa la quinta) del vettore v2
+
+v2.insert(v2.begin() + 2, 3, 7); //inserisce tre elementi con valore 7 a partire dalla terza posizione del vettore v2
+
+//insert ed erase sono operazioni costose in quanto spostano gli elementi del vettore tramite l'uso di iteratori
+
+sort(v.begin(), v.end()); //ordina il vettore v in ordine crescente, richiede l'header <algorithm>
+
+v.reserve(1000); //riserva spazio per 1000 elementi, non cambia la dimensione del vettore ma solo la capacità (evita riallocazioni continue se si sa che si devono inserire molti elementi). Non fa new o delete future
+```
+
+Non sono presenti matrici nella libreria standard, si può usare un vector di vector per simulare una matrice.
+
+```cpp
+vector<vector<int>> mat; //matrice di interi vuota
+
+vector<vector<int>> mat(10); //matrice con 10 righe e 0 colonne di vettori tutti vuoti
+vector<vector<float>> mat(10, vector<float>(5, -2)); //matrice 10x5 con tutti gli elementi inizializzati a -2
+mat[2][3] = 5; //assegna 5 alla riga 2 e colonna 3 della matrice
+```
 ## ESERCITAZIONE 3
 Sistemare il costruttore con due parametri, esponente default a 0 per fare la conversione di tipo di un float `p + 3.2`. 
 
@@ -1143,3 +1219,4 @@ Uno può eliminare il costruttore di copia e l'operatore di assegnazione se non 
 `A(const A& a) = delete;` e `A& operator=(const A& a) = delete;`
 
 Non si può chiamare il costruttore di copia o l'operatore di assegnazione in quanto sono stati eliminati.
+
