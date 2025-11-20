@@ -846,7 +846,6 @@ int main()
     //B può essere statica e A dinamica e viene gestito internamente
     //se non ho scritto il costruttore di B ma di A, quando creo b1 e b2 non viene inizializzato nessun elemento tranne la classe A perché ha un proprio costruttore
 }
-
 ```
 
 ```cpp
@@ -1113,6 +1112,189 @@ mat.resize(10);
 for(int i = 0; i < 10; i++)
     mat[i].resize(20, -1.0); 
 ```
+
+## namespace
+
+Sono dei contenitori dentro i quali si mette il codice. Sono a un livello di modularità superiore rispetto alle classi. Si usano per evitare conflitti di nomi tra funzioni o classi con lo stesso nome.
+```cpp
+namespace MioNamespace
+{
+    class A
+    {
+        //...
+    };
+    void funzione();
+};
+```
+
+Il namespace posso aprirlo in più file, non è necessario che sia tutto in un unico file.
+
+Se non uso un mainspace, le funzioni e le classi sono nel namespace globale.
+
+Se sono fuori dal mio namespace e ho definito al suo interno una classe A, per usarla devo fare:
+
+```cpp
+MioNamespace::A a;
+MioNamespace::funzione();
+```
+
+Per evitare di scrivere sempre `MioNamespace::` si può usare la direttiva `using`
+
+```cpp
+using namespace MioNamespace;
+A a;
+funzione();
+```
+
+`using namespace std;` è usato per evitare di scrivere sempre `std::` prima di cout, cin, string, vector, etc. ma è considerato cattiva norma. Certi nomi compaiono in più librerie, usando il namespace std non si sa a quale versione si sta facendo riferimento.
+
+Una via di mezzo è usare using solo nei cpp, l'hpp lo può usare anche un altro utente.
+
+Una libreria altrettanto comune è la `gsl` che è la scientifica/matematica. Con std ci sono molti conflitti di nome, questo implica che si deve specificare a quale namespace si fa riferimento.
+
+## Eccezioni
+
+I tre costrutti principali sono `try`, `catch` e `throw`.
+
+Bisogna includere `#include <stdexcept>`
+```cpp
+try
+{
+    //blocco con possibili eccezioni
+    //condizione con eccezione generata:
+    throw std::runtime_error("Stringa errore generato");
+}
+catch("Di cosa fa il catch")
+{
+    //cattura un'eccezione generata dal codice scritto dentro al try
+    //anche dalle funzioni annidate
+}
+catch(runtime_error& e)
+{
+    //codice che gestisce l'eccezione
+    cerr << e.what() << endl;
+    return 1;
+}
+//il programma continua dopo le catch (se non fa terminare il programma)
+```
+
+Un'eccezione non catturata viene comunque visualizzata nel terminale e il programma viene abortito.
+
+### Assert
+
+Un altro metodo per gestire le eccezioni è usare `assert`: dico "qualcosa deve essere vero". In un punto qualunque del programma: `assert(n > 0)`. Se n non è maggiore di 0, genera un'eccezione; non sono gestibili come il try e il catch in quanto non c'è la gestione delle eccezioni
+
+`throw` usato per gli errori negli input mentre `assert` è un modo per trovare bug in quanto si genera l'errore quando non dovrebbe.
+
+Bisogna includere `#include <cassert>` in quanto libreria del c.
+
+## Argomenti di conoscenza personale
+
+### Iteratori
+
+Sono come dei puntatori presenti nella libreria std e servono alla gestione le strutture dati. Il modo più comune per scorrere un vettore è:
+```cpp
+vector<int> v{1, 3, 4, -7};
+
+vector<int>::iterator p;
+for(p = v.begin(); p < v.end(); p++)
+    cout << *p << ' ' << endl;
+
+//corrisponde a 
+for(unsigned i = 0; i < v.size(); i++)
+    cout << v[i] << ' ' << endl;
+
+//non tutte le strutture dati hanno le parentesi [], ad esempio le liste non le hanno.
+//gli iteratori funzionano sempre
+```
+
+### Auto
+
+Parola chiave per far prendere il tipo dal valore assegnato. Non viene specificato a priori.
+```cpp
+auto i = 5;
+//corrisponde a 
+int i;
+i = 5;
+
+//comodo per
+auto x = f(y);
+```
+
+### Range loop
+
+Si può dire "vai su tutto il vettore"
+
+```cpp
+for(int e : v)
+    cout << e << ' ' << endl;
+```
+con `e` già elemento del vettore. Si può usare per qualsiasi struttura dati. Si usa spesso `auto` al posto del tipo dell'elemento `e` per evitare modifiche future.
+
+### Altri contenitori
+
+Un contenitore molto comune sono i dizionari (map) a cui io assegno una chiave oltre al valore.
+
+```cpp
+map<string, int> m;
+m["Pippo"] = 12;
+m["Chiave"] = 35;
+```
+Per accedere all'elemento si usa un tipo specificato come chiave, in questo caso stringa. Posso ovviamente avere molti elementi e non solo due.
+
+Le mappe hanno le funzioni per la creazione di un nuovo elemento e la verifica della presenza.
+
+`list, set (insiemi con ricerca ottimizzata (albero binario di ricerca)), map` hanno tutti template.
+
+### Ereditarietà
+
+Definisco una classe come sottoclasse di un'altra, la classe figlio prende gli elementi della classe padre e ne può avere di aggiuntivi (se non ne ha, non è effettivamente una classe diversa).
+
+```cpp
+class Persona 
+{
+    //...
+};
+class Studente : Persona
+{
+    //stessi metodi di Persona
+    //...
+    //metodi aggiuntivi
+};
+```
+
+### Smart Pointers
+
+Per la gestione della memoria classica tramite puntatori si deve usare `new` e `delete`. Gli smart pointer fanno loro la `new` e la `delete`; gestiscono automaticamente la memoria e la sua occupazione senza doverla gestire manualmente.
+
+### Lambda expressions
+
+Funzioni anonime. Si possono applicare le funzioni a tutti gli elementi di un vettore o usare una funzione come parametro di un'altra funzione. Ci passo il corpo intero.
+
+### Generatori di numeri casuali
+
+In tantissime applicazioni serve la generazione di numeri random
+## Visto più avanti
+
+### Move Semantics
+
+```cpp
+//noi abbiamo fatto i costruttori di polinomi che generavano monomi
+//se volevo un polinomio dovevo fare la somma di monomi
+p = Polinomio(2.3, 2) + Polinomio(-3.4, 1) + Polinomio(2.5);
+//ho creato oggetti temporanei dal costruttore e altri dal +
+
+//grande inefficienza
+```
+le funzioni speciali sono 5: costruttore di spostamento, assegnazione di spostamento, costruttore di copia, assegnazione di copia e distruttore.
+
+Il costruttore di spostamento fa la copia di un oggetto temporaneo (che sta per essere distrutto).
+
+### Grafica
+
+Ci sono molte librerie per la gestione di disegni o del monitor. Noi cercheremo di ridurre l'interazione con l'utente al massimo e usare la riga di comando (argv) per la gestione degli input principale.
+
+La libreria più basica è la `Qt`
 
 ## ESERCIZI SU VECTOR
 
@@ -1443,3 +1625,25 @@ Uno può eliminare il costruttore di copia e l'operatore di assegnazione se non 
 `A(const A& a) = delete;` e `A& operator=(const A& a) = delete;`
 
 Non si può chiamare il costruttore di copia o l'operatore di assegnazione in quanto sono stati eliminati.
+
+## Esercizio Compitino 2010-2011
+
+Operatore `!` che inverte la pila passata (funzione non friend) e elimina gli elementi in maniera alterna.
+```cpp
+//passato per copia perché non voglio modificare la pila di partenza ma necessito i valori
+Pila operator!(Pila p)
+{
+    Pila p1;
+
+    while(!p.isEmpty())
+    {
+        p.Pop(); //elimino un elemento alterno
+        if(!p.isEmpty()) //se non è vuota
+        {
+            p1.Push(p.Top()); //inserisco nella pila nuova
+            p.Pop(); //estraggo dalla vecchia
+        }   
+    }
+    return p1;
+}
+```
