@@ -1115,6 +1115,7 @@ for(int i = 0; i < 10; i++)
 ```
 
 ## ESERCIZI SU VECTOR
+
 ```cpp
 //file Persona.hpp
 class Persona
@@ -1136,8 +1137,8 @@ class Persona
         string citta_nascita;
 };
 ```
+
 ```cpp
-//file Persona.cpp
 // File Persone.cpp
 #include "Persone.hpp"
 
@@ -1178,10 +1179,12 @@ bool operator<(const Persona& p1, const Persona& p2)
        || (p1.data_nascita == p2.data_nascita && p1.cognome < p2.cognome));
 }
 ```
+
 Fare una funzione che legge il nome di un file e dice il mese più comune di nascita tra le persone presenti nel file.
 
 Vorrei che restituisse il mese e la frequenza. (o si fa una piccola classe, o si passa per riferimento due parametri o si usa una coppia `pair<int, int>`)
 `pair` ha due campi `first` e `second`.
+
 ```cpp
 #include <iostream>
 #include <fstream>
@@ -1235,7 +1238,9 @@ pair<unsigned,unsigned>  CalcolaMeseFrequente(string nome_file)
     //chiudo il file (automatico alla distruzione di is)
 }
 ```
+
 calcolare il nome più frequente tra le persone nel file.
+
 ```cpp
 pair<string,unsigned> CalcolaNomeFrequente(string nome_file)
 {
@@ -1268,6 +1273,56 @@ pair<string,unsigned> CalcolaNomeFrequente(string nome_file)
 }
 ```
 
+fare una funzione per ordinare il file (si legge tutto, si ordina il vettore e si riscrive il file) tramite l'uso di argoritmi di sort. È necessario implementare l'operatore `<` per la classe Persona.
+
+```cpp
+//funzione esterna pariterica
+friend bool operator<(const Persona& p1, const Persona& p2);
+//...
+bool operator<(const Persona& p1, const Persona& p2)
+{
+    //ordinato persona più vecchia prima, in caso di parità nome in ordine alfabetico
+    return ((p1.data_nascita < p2.data_nascita)
+            || (p1.data_nascita == p2.data_nascita && p1.nome < p2.nome));
+    //parità di cognome sceglie il nome
+    /*
+    return ((p1.data_nascita < p2.data_nascita)
+            || (p1.data_nascita == p2.data_nascita && p1.cognome < p2.cognome)
+            || (p1.data_nascita == p2.data_nascita && p1.cognome == p2.cognome && p1.nome < p2.nome));
+    */
+}
+```
+
+```cpp
+//aprire il file, leggere tutte le persone, chiudere il file, fare sort e poi scrivere il file (aperto in scrittura)
+void OrdinaFile(string nome_file)
+{
+    //non c'è robustezza
+    ifstream is(nome_file);
+    ofstream os;
+
+    vector<Persona> persone;
+    Persona p;
+
+    while (is >> p) //popolo il vettore
+        persone.push_back(p);
+
+    //chiudo il file (automatico alla distruzione di is)
+    //per invocare il distruttore devo usare due blocchi (uscire dallo scope)
+    is.close();
+
+    //posso usare un terzo argomento per sort con una funzione di confronto personalizzata
+    sort(persone.begin(), persone.end()); //ordino il vettore
+
+    os.open(nome_file); //apro in scrittura (sovrascrivo il file)
+
+    //deve essere unsigned per confrontarsi con persone.size()
+    for (unsigned i = 0; i < persone.size(); i++)
+        os << persone[i] << endl;
+
+    os.close();//chiudo il file
+}
+```
 ## ESERCITAZIONE 3
 
 Sistemare il costruttore con due parametri, esponente default a 0 per fare la conversione di tipo di un float `p + 3.2`. 
@@ -1275,6 +1330,7 @@ Sistemare il costruttore con due parametri, esponente default a 0 per fare la co
 Allo stesso modo deve funzionare `3.2 + p` tramite l'operatore somma. USARE IL SUO DRIVER PER I TEST
 
 ## Esercizio Compitino 2020-2021
+
 ```cpp
 class B
 {
@@ -1356,6 +1412,7 @@ A::A(const A& a)
         //p2 = new B(a.p2->Get());
 }
 ```
+
 ```cpp
 A& A::operator=(const A& a)
 {
