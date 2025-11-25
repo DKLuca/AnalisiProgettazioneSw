@@ -1647,3 +1647,178 @@ Pila operator!(Pila p)
     return p1;
 }
 ```
+## Esercizio 2
+
+Presa una stringa, scrivere una funzione che dice se è ben formata: tutte le parentesi sono aperte e chiuse in ordine. Se ci sono parentesi extra o aperte/chiuse nell'ordine sbagliate non è ben formata.
+
+Si usano gli stack.
+```cpp
+while(i < s.lenght()) //si può fare anche con un for
+{
+    if(Aperta(s[i]))
+        p.Push(s[i])
+    else
+    {
+        if(p.isEmpty())
+            return false;
+        ch = p.Top();
+        p.Pop();
+        if(!ParentesiOmologhe(ch, s[i]))
+            return false;
+    }
+    i++;
+}
+return p.isEmpty(); //vedere se le ha chiuse tutte
+```
+```cpp
+bool Aperta(char ch)
+{
+    return ch == '(' || '[' || '{';
+}
+
+bool ParentesiOmologhe(char ch1, char ch2)
+{
+    return (ch1 == '(' && ch2 == ')')
+        || (ch1 == '[' && ch2 == ']')
+        || (ch1 == '{' && ch2 == '}');
+}
+```
+
+## Esercizio 3
+```cpp
+class B
+{
+    public:
+        B(int max) { x = mx; }
+        void SetX(int mx) { x = mx; }
+        int X() { return x; }
+    private:
+        int x;
+};
+
+class A
+{
+    public:
+        A(unsigned n, int e);
+        int operator[](unsigned i) const
+        { return v1[i].X() + v2[i]; }
+        void Set(unsigned i, int e = 0);
+    private:
+        vector <B> v1;
+        int *v2;
+};
+A::A(unsigned n, int e)
+    :v1(n, e)
+{
+    v2 = new int[n];
+    for(unsigned i = 0; i < n; i++)
+        v2[i] = e;
+}
+
+void A::Set(unsigned i, int e) //controllo tramite assert
+{
+    assert(i < v1.size())
+    v1[i].setX(a);
+    v2[i] = e;
+}
+
+int main()
+{
+    A a1(4,8), a2(3,5), a3(10);
+    //dim 4 tutti 8
+    //dim 3 tutti 5
+    //non ha costruttore con valore default, è un errore (compilazione)
+    a2.Set(2);
+    //non passo il secondo parametro, ma ha valore default
+    //nella locazione 2 di a2 scrivo 0 (sia v1 che v2)
+    a2.Set(1, 3);
+    //sia v1 che v2 di 1 scrivo 3
+    a1[0] = 5;
+    //errore in compilazione, non può essere messo a sx l'operatore []
+    a1.Set(5, 2);
+    //errore per l'assert (esecuzione)
+    cout << a1 << endl;
+    //non ho definito l'operatore di output
+    cout << a2[0] << " " << a2[1] << " " << a2[2];
+    //corretto, stampa |10 6 0|
+}
+//costruttore di copia
+A::A(const A& a)
+    : v1(a.v1) //corrisponde a v1 = a.v1 ma costruisco direttamente l'oggetto con costruttore di copia classe vector
+    //posso fare l'assegnazione in quanto vector
+{
+    v2 = new int[v1.size]; //stessa dimensione
+    for(unsigned i = 0; i < v1.size(); i++)
+        v2[i] = a.v2[i];
+}
+
+A& A::operator=(const A& a)
+{
+    if(v1.size() != a.v1.size()) //se dimensione diversa devo riallocare
+    {
+        delete []v2;
+        v2 = new int[a.v1.size()];
+    }
+    v1 = a.v1; //si copia da solo perché vector
+
+    for(unsigned i = 0; i < v1.size(); i++)
+        v2[i] = a.v2[i];
+    return *this;
+}
+A::~A()
+{
+    //v1 è vector, si arrangia
+    delete[] v2;
+}
+```
+## Esercizio 4
+
+```cpp
+//sarebbe più corretto (const string& nome_file)
+unsigned ModificaAppuntamenti(string nome_file)
+{
+    ifstrem is(nome_file); //apro direttamente il file
+    ofstrem os;
+
+    string nome;
+    Data data, oggi;
+    vector<pair<string, Data>> appuntamenti;
+    unsigned i;
+    unsigned orizzonte = 0; //distanza massima
+
+    while(is >> nome >> data)
+        appuntamenti.push_back(make_pair<nome, data>); //crea il vector di appuntamenti nell'ordine di lettura
+
+    is.close(); //chiudo il file di lettura
+    os.open(nome_file); //lo riapro in scrittura
+
+    for(i = 0; i < appuntamenti.size(); i++)
+    {
+        if(appuntamenti[i].second >= oggi)
+        {
+            os << appuntamenti[i].first << ' ' << appuntamenti[i].second << endl;
+            if((appuntamenti[i].second - oggi) > orizzonte)
+                orizzonte = (appuntamenti[i].second - oggi); //posso calcolarlo una volta sola senza chiamare due volte il '-'
+            // distanza  = (appuntamenti[i].second - oggi);
+            //if(distanza > orizzonte) etc...
+        }
+    }
+    os.close();
+    return orizzonte;
+}
+//elimina da un vettore v di interi tutte le occorrenze di un dato valore e
+
+for(i = 0; i < v.size(); i++) //c'è un errore se due elementi sono uguali a e di fila perché non sposta tutti gli elementi successivi e "perdo" un elemento da eliminare
+    if(v[i] == e);
+        v.erase(v.begin() + i);
+
+//soluzione alternativa:
+i = 0;
+while(i < v.size())
+{
+    if(v[i] == e)
+        v.erase(v.begin() + i);
+    else
+        i++;
+}
+```
